@@ -1,0 +1,1 @@
+go build scanner/scanner.go

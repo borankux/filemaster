@@ -5,6 +5,9 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"log"
+	"os"
+	"strconv"
+	"sync"
 	"time"
 )
 
@@ -53,6 +56,9 @@ func walk(root string, depth int) []FileInfo {
 	var set []FileInfo
 	for _, f := range files {
 		fullName := full(root, f.Name())
+
+		//this is where it prints stuff
+		fmt.Println(strconv.Itoa(int(f.Size())) + "," + fullName)
 		newFi := FileInfo{}
 		newFi.fromFs(f, fullName)
 		set = append(set, newFi)
@@ -64,9 +70,38 @@ func walk(root string, depth int) []FileInfo {
 	return set
 }
 
-func main() {
-	walked := walk("E:/", 50)
-	for _, file := range walked {
-		fmt.Println(file.FullName)
-	}
+func scan(root string, wg *sync.WaitGroup, cs chan string, i int) {
+	defer wg.Done()
+	walk(root, 50)
+	cs <- "worker" + strconv.Itoa(i)
 }
+
+func monitorScans(wg *sync.WaitGroup, cs chan string) {
+	wg.Wait()
+	close(cs)
+}
+
+func printWorkers(cs<-chan string, done chan<-bool) {
+	for i:= range cs {
+		fmt.Println(i)
+	}
+	done<-true
+}
+
+func main() {
+	root := os.Args[1]
+
+	wg := &sync.WaitGroup{}
+	cs := make(chan string)
+	for i:=0;i<5;i++ {
+		wg.Add(1)
+		go scan(root, wg, cs, i)
+	}
+
+	go monitorScans(wg, cs)
+
+	done := make(chan bool, 1)
+	//go printWorkers(cs, done)
+	<-done
+}
+
