@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -18,6 +19,7 @@ type FileInfo struct {
 	Size     int64
 	Mode     fs.FileMode
 	Time     time.Time
+	Extension string
 }
 
 func full(root string, path string) string {
@@ -38,6 +40,7 @@ func (file *FileInfo) fromFs(fi fs.FileInfo, fullName string) {
 	file.IsDir = fi.IsDir()
 	file.Time = fi.ModTime()
 	file.FullName = fullName
+	file.Extension = filepath.Ext(fullName)
 }
 
 func walk(root string, depth int) []FileInfo {
@@ -58,9 +61,10 @@ func walk(root string, depth int) []FileInfo {
 		fullName := full(root, f.Name())
 
 		//this is where it prints stuff
-		fmt.Println(strconv.Itoa(int(f.Size())) + "," + fullName)
 		newFi := FileInfo{}
 		newFi.fromFs(f, fullName)
+		//fmt.Println(strconv.Itoa(int(f.Size())) + "," + newFi.FullName + ","+ newFi.Extension)
+
 		set = append(set, newFi)
 		if f.IsDir() {
 			walked := walk(fullName, depth)
@@ -70,10 +74,10 @@ func walk(root string, depth int) []FileInfo {
 	return set
 }
 
-func scan(root string, wg *sync.WaitGroup, cs chan string, i int) {
+func scan(root string, wg *sync.WaitGroup, cs chan string, depth int) {
 	defer wg.Done()
-	walk(root, 50)
-	cs <- "worker" + strconv.Itoa(i)
+	walk(root, depth)
+	cs <- "... Done ..."
 }
 
 func monitorScans(wg *sync.WaitGroup, cs chan string) {
@@ -88,20 +92,22 @@ func printWorkers(cs<-chan string, done chan<-bool) {
 	done<-true
 }
 
-func main() {
+func scanForCMD() {
 	root := os.Args[1]
-
+	depth, _ := strconv.Atoi(os.Args[2])
 	wg := &sync.WaitGroup{}
 	cs := make(chan string)
-	for i:=0;i<5;i++ {
-		wg.Add(1)
-		go scan(root, wg, cs, i)
-	}
+	wg.Add(1)
 
+	go scan(root, wg, cs, depth)
 	go monitorScans(wg, cs)
 
 	done := make(chan bool, 1)
-	//go printWorkers(cs, done)
+	go printWorkers(cs, done)
 	<-done
+}
+
+func main() {
+	scanForCMD()
 }
 
