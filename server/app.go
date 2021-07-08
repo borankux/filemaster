@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/borankux/filemaster/server/boot"
 	"github.com/borankux/filemaster/server/config"
 	"github.com/borankux/filemaster/server/db"
 	"github.com/borankux/filemaster/server/router"
@@ -11,5 +12,6 @@ func main() {
 	gin.SetMode(gin.DebugMode)
 	config.Init("dev")
 	db.Init()
+	boot.Migrate()
 	router.Init()
 }

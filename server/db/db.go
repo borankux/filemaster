@@ -20,10 +20,10 @@ func getDSN () string {
 	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, pass, host , port, name)
 }
 
-func Init()  {
+func Init()  *gorm.DB{
 	log.Println(getDSN())
 	db, _ = gorm.Open(mysql.Open(getDSN()), &gorm.Config{})
-	SetupData()
+	return db
 }
 
 func GetDB() *gorm.DB{
