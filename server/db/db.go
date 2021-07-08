@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	"github.com/borankux/filemaster/server/config"
+	"github.com/borankux/filemaster/server/models"
 	"gorm.io/gorm"
 	"log"
 )
@@ -23,6 +24,11 @@ func getDSN () string {
 func Init()  {
 	log.Println(getDSN())
 	db, _ = gorm.Open(mysql.Open(getDSN()), &gorm.Config{})
+	err := db.AutoMigrate(&models.Request{})
+
+	if err != nil {
+		log.Printf("Failed to auto migrate: %v", err)
+	}
 }
 
 func GetDB() *gorm.DB{
