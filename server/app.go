@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	env := flag.String("e", "dev", "")
+	env := flag.String("e", "", "")
 
 	flag.Usage = func() {
 		fmt.Println("Usage: server -e {mode}")
