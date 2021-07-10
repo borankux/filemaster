@@ -1,4 +1,4 @@
-package fs
+package scans
 
 import (
 	"io/fs"
@@ -19,7 +19,7 @@ type FileInfo struct {
 }
 
 
-func (file *FileInfo) fromFs(fi fs.FileInfo, fullName string) {
+func (file *FileInfo) FromFs(fi fs.FileInfo, fullName string) {
 	file.Name = fi.Name()
 	file.Mode = fi.Mode()
 	file.IsDir = fi.IsDir()
@@ -29,7 +29,7 @@ func (file *FileInfo) fromFs(fi fs.FileInfo, fullName string) {
 }
 
 
-func walk(root string, depth int) []FileInfo {
+func Walk(root string, depth int) []FileInfo {
 	//if it is 0, then it means end
 	if depth == 0 {
 		return nil
@@ -44,16 +44,16 @@ func walk(root string, depth int) []FileInfo {
 
 	var set []FileInfo
 	for _, f := range files {
-		fullName := full(root, f.Name())
+		fullName := Full(root, f.Name())
 
 		//this is where it prints stuff
 		newFi := FileInfo{}
-		newFi.fromFs(f, fullName)
+		newFi.FromFs(f, fullName)
 		//fmt.Println(strconv.Itoa(int(f.Size())) + "," + newFi.FullName + ","+ newFi.Extension)
 
 		set = append(set, newFi)
 		if f.IsDir() {
-			walked := walk(fullName, depth)
+			walked := Walk(fullName, depth)
 			set = append(set, walked...)
 		}
 	}
@@ -61,7 +61,7 @@ func walk(root string, depth int) []FileInfo {
 }
 
 
-func full(root string, path string) string {
+func Full(root string, path string) string {
 	last := root[len(root)-1:]
 	middle := ""
 
